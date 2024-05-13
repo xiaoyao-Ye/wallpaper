@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { dialog, path, shell } from "@tauri-apps/api";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { useState } from "react";
@@ -24,7 +25,7 @@ function App() {
   return (
     <>
       <Img src={img} />
-      <button onClick={selectFile}>选择壁纸</button>
+      <Button onClick={selectFile}>选择壁纸</Button>
     </>
   );
 }
