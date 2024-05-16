@@ -25,3 +25,9 @@ export function generateTime() {
 
   return timeList
 }
+
+export function timeToTimeStamp(time: string) {
+  const [H, M, S] = time.split(":")
+  const timeStamp = new Date().setHours(+H, +M, +S, 0)
+  return timeStamp
+}
