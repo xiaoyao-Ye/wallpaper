@@ -159,7 +159,7 @@ export default class CustomStorage {
   detectionStorageContext(currentSize: number) {
     if (this.usage + currentSize >= this.quota) {
       const storage = this.getClearStorage()
-      for (let { key, data } of storage) {
+      for (let { key } of storage) {
         if (this.usage + currentSize < this.quota) break
         this.removeItem(key)
         this.initCacheSize()

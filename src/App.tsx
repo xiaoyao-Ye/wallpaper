@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { dialog, path, shell } from "@tauri-apps/api"
+import { dialog } from "@tauri-apps/api"
 import { convertFileSrc } from "@tauri-apps/api/tauri"
 import { useEffect, useState } from "react"
 import Img from "./components/Img"
@@ -16,6 +16,7 @@ import {
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select"
 import storage from "./lib/localStorage"
 import { generateTime, timeToTimeStamp } from "./lib/utils"
+import { setWallpaper } from "./lib/wallpaper"
 
 function App() {
   interface Form {
@@ -42,23 +43,17 @@ function App() {
     if (!imgList.length) return
     clearTimeout(timeID)
     const nextIndex = imgList.findIndex(f => timeToTimeStamp(f.time) > new Date().getTime())
-    if (nextIndex !== -1) setWallpaper(imgList[nextIndex])
-    else setWallpaper(imgList[0])
+    if (nextIndex !== -1) addTask(imgList[nextIndex])
+    else addTask(imgList[0])
 
     // 立即设置当前时间段的壁纸
     const curIndex = nextIndex - 1 >= 0 ? nextIndex - 1 : imgList.length - 1
     const current: Form = { ...imgList[curIndex] }
     current.time = undefined
-    setWallpaper(current)
-  }
-  async function changeWallpaper(target: Form) {
-    const shellPath = await path.resolve("../public/ChangeWallpaper.ps1")
-    const args = ["-File", shellPath, target.imgPath!]
-    const command = new shell.Command("run-powershell", args)
-    await command.execute()
+    addTask(current)
   }
 
-  function setWallpaper(target: Form) {
+  function addTask(target: Form) {
     if (target.time) {
       const date = new Date()
       const curDate = new Date()
@@ -67,12 +62,12 @@ function App() {
       if (delay < 0) delay = date.setDate(date.getDate() + 1) - curDate.getTime()
 
       timeID = setTimeout(() => {
-        changeWallpaper(target)
+        setWallpaper(target.imgPath!)
         refresh()
       }, delay)
       return
     }
-    changeWallpaper(target)
+    setWallpaper(target.imgPath!)
   }
 
   const [imgList, setImgList] = useState<Required<Form>[]>([])
