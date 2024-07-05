@@ -6,8 +6,8 @@
 // fn greet(name: &str) -> String {
 //     format!("Hello, {}! You've been greeted from Rust!", name)
 // }
-use tauri::Manager;
-use tauri::{SystemTray, CustomMenuItem, SystemTrayMenu, SystemTrayMenuItem, SystemTrayEvent, AppHandle, Wry};
+use tauri::{Manager, SystemTray, CustomMenuItem, SystemTrayMenu, SystemTrayMenuItem, SystemTrayEvent, AppHandle, Wry};
+use tauri_plugin_autostart::MacosLauncher;
 
 // 创建系统托盘
 pub fn create_system_tray() -> SystemTray {
@@ -50,6 +50,12 @@ pub fn handle_system_tray_event(app: &AppHandle<Wry>, event: SystemTrayEvent) {
     }
 }
 
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+  args: Vec<String>,
+  cwd: String,
+}
+
 fn main() {
     // tauri::Builder::default()
     //     .invoke_handler(tauri::generate_handler![greet])
@@ -69,8 +75,19 @@ fn main() {
 
     // 保持前端在后台运行
     tauri::Builder::default()
+        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec![]) /* arbitrary number of args to pass to your app */))
+        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+            // println!("{}, {argv:?}, {cwd}", app.package_info().name);
+            app.emit_all("single-instance", Payload { args: argv, cwd }).unwrap();
+
+            app.get_window("main").unwrap().show().unwrap();
+        }))
         .system_tray(create_system_tray())
     	.on_system_tray_event(handle_system_tray_event)
+        // .setup(|app| {
+        //     app.get_window("main").unwrap().hide().unwrap();
+        //     Ok(())
+        // })
         .on_window_event(|event| match event.event() {
             tauri::WindowEvent::CloseRequested { api, .. } => {
                 event.window().hide().unwrap();
